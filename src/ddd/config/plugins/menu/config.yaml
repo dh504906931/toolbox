@@ -1,0 +1,10 @@
+# 主菜单插件配置
+display:
+  title: "命令行工具箱"
+  prompt: "请选择 > "
+  help_text: "按数字键选择功能，'-'返回上级，'q'退出程序"
+  table:
+    title_style: "bold cyan"
+    index_style: "cyan"
+    name_style: "green"
+    desc_style: "yellow"
