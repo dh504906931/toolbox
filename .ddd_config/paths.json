@@ -1,0 +1,17 @@
+{
+  "example": {
+    "path": "/mnt/f/code/projects/github/toolbox/examples",
+    "description": "示例代码目录",
+    "created_at": "2024-01-01T00:00:00.000000"
+  },
+  "src": {
+    "path": "/mnt/f/code/projects/github/toolbox/src",
+    "description": "源码目录",
+    "created_at": "2024-01-01T00:00:00.000000"
+  },
+  "config": {
+    "path": "/mnt/f/code/projects/github/toolbox/.ddd_config",
+    "description": "本地配置目录",
+    "created_at": "2024-01-01T00:00:00.000000"
+  }
+}

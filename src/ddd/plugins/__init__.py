@@ -1,6 +1,7 @@
 """
-插件包
+DDD插件模块
 """
-from .menu import MenuPlugin
 
-__all__ = ['MenuPlugin']
+from .set_plugin import SetPlugin
+
+__all__ = ['SetPlugin']

@@ -22,4 +22,16 @@ dependencies = [
 ]
 
 [project.scripts]
-ddd = "ddd.cli:app"
+ddd = "ddd.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/ddd-toolbox"
+Repository = "https://github.com/yourusername/ddd-toolbox"
+Issues = "https://github.com/yourusername/ddd-toolbox/issues"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]

@@ -1,5 +1,6 @@
 """
-美观的UI界面核心模块
+TUI渲染器核心模块 - 负责美观的视觉呈现
+专注于渲染组件，不处理交互逻辑
 """
 
 import os
@@ -43,8 +44,8 @@ class Theme:
     BORDER = "#475569"       # 边框色
 
 
-class UI:
-    """统一的UI界面类"""
+class Renderer:
+    """TUI渲染器类 - 专注视觉呈现"""
     
     def __init__(self):
         self.console = Console()
@@ -112,6 +113,11 @@ class UI:
             )
             
         if show_help:
+            table.add_row(
+                "[-]",
+                "⬅️ 返回",
+                "返回上一级"
+            )
             table.add_row(
                 "[q]",
                 "🚪 退出",
