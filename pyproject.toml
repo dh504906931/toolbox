@@ -24,6 +24,9 @@ dependencies = [
 [project.scripts]
 ddd = "ddd.cli:main"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/ddd"]
+
 [project.urls]
 Homepage = "https://github.com/yourusername/ddd-toolbox"
 Repository = "https://github.com/yourusername/ddd-toolbox"

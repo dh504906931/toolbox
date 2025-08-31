@@ -3,7 +3,7 @@
 """
 
 from typing import List, Dict
-from ..core.base import PageBase, Option
+from ..core.base import PageBase, Option, get_renderer
 from ..core.structure import StructureManager
 
 
@@ -12,17 +12,15 @@ class HomePage(PageBase):
     
     def __init__(self):
         super().__init__(
-            short_name="home",
+            name="home",
             display_name="DDD 开发工具箱",
-            description="领域驱动设计开发者工具集合",
+            description="可拓展工具集合",
             summary="主页面，显示所有可用的工具和功能",
             icon="🏠"
         )
         
     def initialize(self) -> None:
         """初始化主页 - 不再用于注册，仅用于运行时初始化"""
-        # 新设计下，页面初始化不再负责注册子项
-        # 子项关系由结构管理器从get_default_children方法获取
         pass
     
     def get_default_children(self) -> List[Dict]:
@@ -30,15 +28,9 @@ class HomePage(PageBase):
         return [
             {
                 "type": "plugin",
-                "name": "path", 
+                "name": "cd", 
                 "description": "管理常用路径的短名映射"
             },
-            # 可以在这里添加更多默认子项
-            # {
-            #     "type": "page", 
-            #     "name": "dev_tools",
-            #     "description": "开发工具集合"
-            # }
         ]
         
     def get_options(self) -> List[Option]:
@@ -55,7 +47,7 @@ class HomePage(PageBase):
                 options.append(Option(
                     key=str(i + 1),  # 数字键
                     name=child.get('display_name', child.get('name')),
-                    description=child.get('description', ''),
+                    description="快速跳转到页面",
                     icon=child.get('icon', '📄'),
                     target=child.get('name'),
                     option_type='page'
@@ -66,21 +58,11 @@ class HomePage(PageBase):
                 options.append(Option(
                     key=str(i + 1),  # 数字键
                     name=child.get('name'),
-                    description=child.get('summary', ''),
+                    description="快速跳转到常用路径",
                     icon="🔌",
                     target=plugin_instance,  # 直接传递插件实例
                     option_type='plugin'
                 ))
         
-        # 添加特殊的设置功能（双击*进入）
-        if options:  # 只有当有其他选项时才添加
-            options.append(Option(
-                key="*",
-                name="页面设置",
-                description="双击*进入页面结构设置",
-                icon="⚙️",
-                target="page_settings",
-                option_type="plugin"
-            ))
-            
+        # 不再在选项列表中添加设置选项，设置通过双击*进入（在帮助信息中说明）
         return options
