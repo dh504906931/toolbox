@@ -9,8 +9,6 @@ from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from rich.table import Table
 
-# 导入我们重构后的输入工具
-from ..utils import input_utils
 
 # 延迟导入Rich库以提高启动速度
 def _import_rich():

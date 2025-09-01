@@ -12,22 +12,22 @@ from ..utils.config import get_config_manager
 
 class CdPlugin(PluginBase):
     """路径管理插件"""
-    
+
     def __init__(self):
         super().__init__(
             name="cd",
             summary="快速跳转常用路径",
             category="system"
         )
-        
+
         # 配置管理器
         self.config_manager = get_config_manager()
         self.config_dir = self.config_manager.get_config_dir()
         self.config_file = self.config_manager.get_paths_file()
-        
+
         # 加载路径配置
         self._load_paths()
-    
+
     def _load_paths(self) -> None:
         """加载路径配置"""
         try:
@@ -43,7 +43,7 @@ class CdPlugin(PluginBase):
             print(f"⚠️ 加载路径配置失败: {e}, 重置配置...")
             self.paths = {}
             self._save_paths()
-    
+
     def _save_paths(self) -> None:
         """保存路径配置"""
         try:
@@ -53,7 +53,7 @@ class CdPlugin(PluginBase):
             # print(f"💾 路径配置已保存: {self.config_file}")  # 静默保存
         except Exception as e:
             print(f"❌ 保存路径配置失败: {e}")
-    
+
     def run(self, operation: str = "interactive", args: List[str] = None, **kwargs) -> Any:
         """执行路径操作"""
         if operation == "cli":
@@ -73,7 +73,7 @@ class CdPlugin(PluginBase):
         else:
             print(f"❌ 未知操作: {operation}")
             return False
-    
+
     def _handle_cli(self, args: List[str]) -> bool:
         """处理CLI调用"""
         if not args:
@@ -90,11 +90,11 @@ class CdPlugin(PluginBase):
                     if path_info.get('description'):
                         print(f"      {path_info['description']}")
             return True
-        
+
         # 处理子命令
         subcommand = args[0]
         sub_args = args[1:]
-        
+
         if subcommand == "add":
             if len(sub_args) >= 2:
                 return self._add_path(sub_args[0], sub_args[1])
@@ -132,26 +132,26 @@ class CdPlugin(PluginBase):
                 for short_name in self.paths.keys():
                     print(f"  {short_name}")
                 return False
-    
+
     def _cli_test_paths(self) -> None:
         """CLI模式下测试路径"""
         if not self.paths:
             print("暂无路径可测试")
             return
-        
+
         print("测试路径状态:")
         for short_name, path_info in self.paths.items():
             path = path_info['path']
             exists = os.path.exists(path)
             status = "✅" if exists else "❌"
             print(f"  {status} {short_name} -> {path}")
-    
+
     def _interactive_mode(self) -> bool:
         """交互式路径管理"""
         print("\n" + "="*50)
         print("📁 路径管理器")
         print("="*50)
-        
+
         while True:
             print(f"\n当前已保存 {len(self.paths)} 个路径:")
             if not self.paths:
@@ -161,17 +161,17 @@ class CdPlugin(PluginBase):
                     print(f"  📍 {short_name} -> {path_info['path']}")
                     if path_info.get('description'):
                         print(f"      {path_info['description']}")
-            
+
             print("\n操作选项:")
             print("  [1] 添加路径")
             print("  [2] 删除路径")
-            print("  [3] 编辑路径") 
+            print("  [3] 编辑路径")
             print("  [4] 测试路径")
             print("  [-] 返回")
-            
-            from ..utils.input_utils import get_single_key_input
+
+            from ddd.ui_handler.utils import get_single_key_input
             choice = get_single_key_input("\n请选择操作 (1-4, - 返回): ")
-            
+
             if choice == "-":
                 break
             elif choice == "1":
@@ -184,14 +184,14 @@ class CdPlugin(PluginBase):
                 self._interactive_test()
             else:
                 print("❌ 无效选择，请重试")
-        
+
         return True
-    
+
     def _interactive_add(self) -> None:
         """交互式添加路径"""
         print("\n➕ 添加新路径")
         print("-" * 30)
-        
+
         # 获取短名
         while True:
             try:
@@ -212,7 +212,7 @@ class CdPlugin(PluginBase):
             except KeyboardInterrupt:
                 print("\n👋 取消操作")
                 return
-        
+
         # 获取路径
         while True:
             try:
@@ -226,11 +226,11 @@ class CdPlugin(PluginBase):
                 if not path:
                     print("❌ 路径不能为空")
                     continue
-                
+
                 # 展开路径
                 expanded_path = os.path.expanduser(path)
                 if not os.path.exists(expanded_path):
-                    from ..utils.input_utils import get_single_key_input
+                    from ddd.ui_handler.utils import get_single_key_input
                     confirm = get_single_key_input(f"⚠️ 路径 '{expanded_path}' 不存在，是否仍要添加? (y/N): ")
                     if confirm != 'y':
                         continue
@@ -238,47 +238,47 @@ class CdPlugin(PluginBase):
             except KeyboardInterrupt:
                 print("\n👋 取消操作")
                 return
-        
+
         # 获取描述（可选）
         try:
             description = input("描述 (可选) [直接回车跳过]: ").strip()
         except KeyboardInterrupt:
             print("\n👋 取消操作")
             return
-        
+
         # 添加路径
         self.paths[short_name] = {
             "path": expanded_path,
             "description": description,
             "created_at": self._get_timestamp()
         }
-        
+
         self._save_paths()
         print(f"✅ 已添加路径: {short_name} -> {expanded_path}")
-    
+
     def _interactive_remove(self) -> None:
         """交互式删除路径"""
         if not self.paths:
             print("❌ 暂无路径可删除")
             return
-        
+
         print("\n➖ 删除路径")
         print("-" * 30)
-        
+
         # 显示现有路径
         for i, (short_name, path_info) in enumerate(self.paths.items(), 1):
             print(f"  [{i}] {short_name} -> {path_info['path']}")
-        
+
         try:
             choice = input(f"\n请选择要删除的路径 (1-{len(self.paths)}) 或输入短名 [q=退出, -=取消]: ").strip()
-            
+
             if choice.lower() == 'q':
                 print("👋 退出删除操作")
                 return
             if choice == '-':
                 print("📝 取消删除操作")
                 return
-            
+
             # 尝试按数字选择
             if choice.isdigit():
                 index = int(choice) - 1
@@ -293,10 +293,10 @@ class CdPlugin(PluginBase):
             else:
                 print("❌ 未找到指定的路径")
                 return
-            
+
             # 确认删除
             path_info = self.paths[short_name]
-            from ..utils.input_utils import get_single_key_input
+            from ddd.ui_handler.utils import get_single_key_input
             confirm = get_single_key_input(f"确认删除 '{short_name}' -> '{path_info['path']}'? (y/N): ")
             if confirm == 'y':
                 del self.paths[short_name]
@@ -307,30 +307,30 @@ class CdPlugin(PluginBase):
         except KeyboardInterrupt:
             print("\n👋 取消操作")
             return
-    
+
     def _interactive_edit(self) -> None:
         """交互式编辑路径"""
         if not self.paths:
             print("❌ 暂无路径可编辑")
             return
-        
+
         print("\n✏️ 编辑路径")
         print("-" * 30)
-        
+
         # 显示现有路径
         for i, (short_name, path_info) in enumerate(self.paths.items(), 1):
             print(f"  [{i}] {short_name} -> {path_info['path']}")
-        
+
         try:
             choice = input(f"\n请选择要编辑的路径 (1-{len(self.paths)}) 或输入短名 [q=退出, -=取消]: ").strip()
-            
+
             if choice.lower() == 'q':
                 print("👋 退出编辑操作")
                 return
             if choice == '-':
                 print("📝 取消编辑操作")
                 return
-            
+
             # 选择路径
             if choice.isdigit():
                 index = int(choice) - 1
@@ -344,13 +344,13 @@ class CdPlugin(PluginBase):
             else:
                 print("❌ 未找到指定的路径")
                 return
-            
+
             # 编辑选择的路径
             path_info = self.paths[short_name]
             print(f"\n编辑路径: {short_name}")
             print(f"当前路径: {path_info['path']}")
             print(f"当前描述: {path_info.get('description', '(无)')}")
-            
+
             # 编辑路径
             try:
                 new_path = input(f"新路径 (回车保持不变) [q=退出]: ").strip()
@@ -360,13 +360,13 @@ class CdPlugin(PluginBase):
                 if new_path:
                     expanded_path = os.path.expanduser(new_path)
                     if not os.path.exists(expanded_path):
-                        from ..utils.input_utils import get_single_key_input
+                        from ddd.ui_handler.utils import get_single_key_input
                         confirm = get_single_key_input(f"⚠️ 路径 '{expanded_path}' 不存在，是否仍要使用? (y/N): ")
                         if confirm == 'y':
                             path_info['path'] = expanded_path
                     else:
                         path_info['path'] = expanded_path
-                
+
                 # 编辑描述
                 new_description = input(f"新描述 (回车保持不变) [q=退出]: ").strip()
                 if new_description.lower() == 'q':
@@ -374,7 +374,7 @@ class CdPlugin(PluginBase):
                     return
                 if new_description:
                     path_info['description'] = new_description
-                
+
                 path_info['updated_at'] = self._get_timestamp()
                 self._save_paths()
                 print(f"✅ 已更新路径: {short_name}")
@@ -384,16 +384,16 @@ class CdPlugin(PluginBase):
         except KeyboardInterrupt:
             print("\n👋 取消操作")
             return
-    
+
     def _interactive_test(self) -> None:
         """交互式测试路径"""
         if not self.paths:
             print("❌ 暂无路径可测试")
             return
-        
+
         print("\n🧪 测试路径")
         print("-" * 30)
-        
+
         for short_name, path_info in self.paths.items():
             path = path_info['path']
             exists = os.path.exists(path)
@@ -401,60 +401,60 @@ class CdPlugin(PluginBase):
             print(f"  {status} {short_name} -> {path}")
             if not exists:
                 print(f"      ⚠️ 路径不存在")
-    
+
     def _add_path(self, short_name: str, path: str) -> bool:
         """添加路径"""
         if not short_name or not path:
             return False
-        
+
         if short_name in self.paths:
             print(f"❌ 短名 '{short_name}' 已存在")
             return False
-        
+
         expanded_path = os.path.expanduser(path)
         self.paths[short_name] = {
             "path": expanded_path,
             "description": "",
             "created_at": self._get_timestamp()
         }
-        
+
         self._save_paths()
         print(f"✅ 已添加路径: {short_name} -> {expanded_path}")
         return True
-    
+
     def _remove_path(self, short_name: str) -> bool:
         """删除路径"""
         if not short_name:
             return False
-        
+
         if short_name not in self.paths:
             print(f"❌ 未找到路径: {short_name}")
             return False
-        
+
         del self.paths[short_name]
         self._save_paths()
         print(f"✅ 已删除路径: {short_name}")
         return True
-    
+
     def _list_paths(self) -> Dict[str, Dict]:
         """列出所有路径"""
         return self.paths
-    
+
     def _get_path(self, short_name: str) -> Optional[str]:
         """获取指定短名的路径"""
         if short_name in self.paths:
             return self.paths[short_name]['path']
         return None
-    
+
     def _get_completions(self, partial: str) -> List[str]:
         """获取路径短名的补全建议"""
         return [name for name in self.paths.keys() if name.startswith(partial)]
-    
+
     def _get_timestamp(self) -> str:
         """获取当前时间戳"""
         import datetime
         return datetime.datetime.now().isoformat()
-    
+
     def get_help(self) -> str:
         """获取帮助信息"""
         return """路径管理器 - 管理常用路径的短名映射

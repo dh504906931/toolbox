@@ -96,18 +96,24 @@ class PageBase(ABC):
                 }
                 for o in options
             ]
-            table = renderer.print_menu(
-                title="选项列表", options=display_options, show_help=True
-            )
+            table = renderer.print_menu_table(title="选项列表", options=display_options)
             renderer.console.print(table)
-        renderer.print_help_info()
+
+        # 传入页面级别的帮助信息
+        help_items = [
+            {"key": "q", "description": "退出程序"},
+            {"key": "-", "description": "返回上级"},
+            {"key": "数字", "description": "选择功能"},
+            {"key": "双击*", "description": "页面设置"}
+        ]
+        renderer.print_help_panel(help_items, title="操作说明")
 
     def get_user_choice(self, renderer: "UIHandlerBase") -> str:
         """
         【已修改】获取用户输入 - 完全委托给Renderer处理
         """
         # 页面层不再关心输入的实现细节（如双击）
-        return renderer.get_menu_input("请选择功能: ")
+        return renderer.get_choice("请选择功能: ", target_key="*")
 
     def handle_choice(
         self, choice: str, renderer: "UIHandlerBase", is_cli_launch: bool = False
@@ -201,7 +207,7 @@ class PageBase(ABC):
         """
         【已修改】等待用户按键继续 - 使用Renderer的新方法
         """
-        renderer.wait_for_any_key()
+        renderer.wait_for_key("\n按任意键继续...")
 
 
 class PluginBase(ABC):
