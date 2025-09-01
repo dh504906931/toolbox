@@ -96,8 +96,7 @@ class PageBase(ABC):
                 }
                 for o in options
             ]
-            table = renderer.print_menu_table(title="选项列表", options=display_options)
-            renderer.console.print(table)
+            renderer.print_menu_table(title="选项列表", options=display_options)
 
         # 传入页面级别的帮助信息
         help_items = [

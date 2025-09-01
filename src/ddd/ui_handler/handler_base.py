@@ -10,19 +10,6 @@ if TYPE_CHECKING:
     from rich.table import Table
 
 
-# 延迟导入Rich库以提高启动速度
-def _import_rich():
-    """延迟导入Rich库组件"""
-    global Console, Panel, Table, Text, Layout, Align, Padding, box
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.table import Table
-    from rich.text import Text
-    from rich.layout import Layout
-    from rich.align import Align
-    from rich.padding import Padding
-    from rich import box
-
 class Theme:
     """主题配置类"""
     PRIMARY = "#00d4aa"
@@ -46,7 +33,7 @@ class UIHandlerBase(ABC):
     def from_type(cls, type: str):
         """Create a UI handler from a type string"""
         if type == "rich":
-            from ddd.ui_handler.rich_handler_new import RichHandler
+            from ddd.ui_handler.rich_handler import RichHandler
 
             return RichHandler()
         elif type == "flet":
@@ -55,8 +42,10 @@ class UIHandlerBase(ABC):
             return FletUIHandler()
         else:
             raise ValueError(
-                f"Invalid UI handler type: {type}. Supported types: 'rich', 'web'"
+                f"Invalid UI handler type: {type}. Supported types: 'rich', 'flet'"
             )
+
+    # === 原有接口（保持向后兼容）===
 
     @abstractmethod
     def clear_screen(self):
@@ -104,6 +93,116 @@ class UIHandlerBase(ABC):
         self, prompt: Union[str, Any] = "", default: str = ""
     ) -> Optional[str]:
         """Get user input with optional prompt and default, returns None if interrupted"""
+        raise NotImplementedError
+
+    # === 新的语义接口 ===
+
+    # 基础内容语义接口
+    @abstractmethod
+    def print_text_semantic(self, text: str):
+        """打印纯文本 - 语义接口"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_panel_semantic(self, content: str, title: str = None):
+        """显示面板内容 - 语义接口"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_table_semantic(
+        self, data: List[List[str]], headers: List[str] = None, title: str = None
+    ):
+        """显示表格数据 - 语义接口"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_input_semantic(
+        self, prompt: str, default: str = "", exit_message: str = "再见!"
+    ) -> str:
+        """获取用户输入 - 语义接口"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_choice(self, prompt: str, target_key: str = "*") -> str:
+        """获取选择输入"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def wait_for_key(self, prompt: str = "\n按任意键继续..."):
+        """等待按键"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def confirm(
+        self,
+        message: str,
+        default: bool = False,
+        yes_text: str = "Y",
+        no_text: str = "n",
+    ) -> bool:
+        """确认对话框"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def show_progress(self, description: str):
+        """显示进度"""
+        raise NotImplementedError
+
+    # 特定语义接口
+    @abstractmethod
+    def print_success(self, message: str):
+        """成功消息语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_error(self, message: str):
+        """错误消息语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_warning(self, message: str):
+        """警告消息语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_info(self, message: str):
+        """信息消息语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_banner(self, title: str, subtitle: str = "", version: str = ""):
+        """横幅语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_section(self, title: str, content: str):
+        """章节语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_menu_table(self, title: str, options: List[Dict[str, Any]]):
+        """菜单表格语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def print_help_panel(
+        self, help_items: List[Dict[str, str]], title: str = "操作说明"
+    ):
+        """帮助信息语义"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def select_from_list(
+        self,
+        title: str,
+        options: List[str],
+        allow_multiple: bool = False,
+        single_prompt: str = "请选择选项",
+        multiple_prompt: str = "请选择选项 (多选用逗号分隔)",
+        range_error: str = "选择超出范围，请重新选择",
+        invalid_error: str = "输入无效，请输入数字",
+    ) -> List[int]:
+        """列表选择语义"""
         raise NotImplementedError
 
 

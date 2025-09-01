@@ -1,13 +1,15 @@
-
-import json
+import sys
+import platform
 import time
+import threading
+import queue
+import json
 import uuid
+import logging
 from typing import Any, Callable
 from dataclasses import dataclass
-import logging
 
 logger = logging.getLogger(__name__)
-
 
 
 """
@@ -22,6 +24,7 @@ try:
     from rich.table import Table
     from rich.text import Text
     from rich import box
+
     RICH_AVAILABLE = True
     logger.debug("Rich库导入成功")
 except ImportError:
@@ -33,6 +36,7 @@ except ImportError:
 # Flet library (optional)
 try:
     import flet as ft
+
     FLET_AVAILABLE = True
     logger.debug("Flet库导入成功")
 except ImportError:
@@ -59,12 +63,6 @@ def check_flet_available():
 跨平台输入工具模块
 解决Windows/WSL/Linux下终端输入的兼容性问题
 """
-
-import sys
-import platform
-import time
-import threading
-import queue
 
 
 def get_single_key_input(prompt: str = "") -> str:

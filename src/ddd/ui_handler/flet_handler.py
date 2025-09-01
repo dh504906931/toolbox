@@ -10,7 +10,6 @@ from ddd.ui_handler.handler_base import UIHandlerBase
 from ddd.ui_handler.utils import ft, check_flet_available, RPCMessage, RPCResponse, RPCExecResult
 
 
-# Constants
 DEFAULT_RPC_PORT = 5555
 DEFAULT_FLET_PORT = 5000
 DEFAULT_TITLE = "DDD Toolbox"
@@ -24,7 +23,6 @@ SCROLL_DELAY_SEC = 0.1
 SCROLL_DURATION_MS = 200
 
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
 
@@ -441,6 +439,8 @@ class FletServerProc:
         )
         self.content_column.controls.append(welcome_card)
 
+    # === 原有接口方法 ===
+
     def clear_screen(self):
         """Clear the content display"""
         if self.content_column:
@@ -724,6 +724,159 @@ class FletServerProc:
             result = self._create_text_input(prompt, default)
 
         return result
+
+    # === 新的语义接口实现 ===
+
+    def print_text_semantic(self, text: str):
+        """打印纯文本 - 语义接口"""
+        self.print_text(text)
+
+    def print_panel_semantic(self, content: str, title: str = None):
+        """显示面板内容 - 语义接口"""
+        self.print_panel(content, title=title, style="info")
+
+    def print_table_semantic(
+        self, data: List[List[str]], headers: List[str] = None, title: str = None
+    ):
+        """显示表格数据 - 语义接口"""
+        # Convert data format for Flet
+        columns = None
+        if headers:
+            columns = [{"header": header} for header in headers]
+
+        self.print_table(title=title, columns=columns, rows=data)
+        # Return a mock table object for compatibility
+        return type("Table", (), {})()
+
+    def get_input_semantic(
+        self, prompt: str, default: str = "", exit_message: str = "再见!"
+    ) -> str:
+        """获取用户输入 - 语义接口"""
+        result = self.get_input(prompt, default)
+        if result is None:
+            # Handle keyboard interrupt case
+            return ""
+        return result
+
+    def get_choice(self, prompt: str, target_key: str = "*") -> str:
+        """获取选择输入"""
+        return self.get_input(prompt)
+
+    def wait_for_key(self, prompt: str = "\n按任意键继续..."):
+        """等待按键"""
+        self.get_input(prompt, "continue")
+
+    def confirm(
+        self,
+        message: str,
+        default: bool = False,
+        yes_text: str = "Y",
+        no_text: str = "n",
+    ) -> bool:
+        """确认对话框"""
+        default_text = yes_text if default else no_text
+        response = self.get_input(f"{message} ({yes_text}/{no_text})", default_text)
+        return response and response.lower() == yes_text.lower()
+
+    def show_progress(self, description: str):
+        """显示进度"""
+        # For Flet, we'll just display a text message
+        self.print_text_semantic(f"正在进行: {description}...")
+        return None
+
+    def print_success(self, message: str):
+        """成功消息语义"""
+        self.print_panel(f"✅ {message}", title="成功", style="success")
+
+    def print_error(self, message: str):
+        """错误消息语义"""
+        self.print_panel(f"❌ {message}", title="错误", style="error")
+
+    def print_warning(self, message: str):
+        """警告消息语义"""
+        self.print_panel(f"⚠️ {message}", title="警告", style="warning")
+
+    def print_info(self, message: str):
+        """信息消息语义"""
+        self.print_panel(f"ℹ️ {message}", title="信息", style="info")
+
+    def print_banner(self, title: str, subtitle: str = "", version: str = ""):
+        """横幅语义"""
+        banner_text = f"🚀 {title}"
+        if version:
+            banner_text += f" v{version}"
+        if subtitle:
+            banner_text += f"\n{subtitle}"
+
+        self.print_panel(banner_text, title="横幅", style="primary")
+
+    def print_section(self, title: str, content: str):
+        """章节语义"""
+        self.print_panel_semantic(content, title=f"📝 {title}")
+
+    def print_menu_table(self, title: str, options: List[Dict[str, Any]]) -> Any:
+        """菜单表格语义"""
+        # Convert options to table format
+        headers = ["序号", "功能", "描述"]
+        data = []
+
+        for option in options or []:
+            key = option.get("key", "")
+            icon_opt = option.get("icon", "")
+            name = option.get("name", "")
+            desc = option.get("description", "")
+            name_with_icon = f"{icon_opt} {name}" if icon_opt else name
+            data.append([f"[{key}]", name_with_icon, desc])
+
+        self.print_table_semantic(data, headers, f"📋 {title}")
+        return type("Table", (), {})()
+
+    def print_help_panel(
+        self, help_items: List[Dict[str, str]], title: str = "操作说明"
+    ):
+        """帮助信息语义"""
+        help_text = f"💡 {title}:\n"
+        for item in help_items:
+            key = item.get("key", "")
+            desc = item.get("description", "")
+            help_text += f"[{key}] {desc}\n"
+
+        self.print_panel_semantic(help_text.strip(), title="帮助")
+
+    def select_from_list(
+        self,
+        title: str,
+        options: List[str],
+        allow_multiple: bool = False,
+        single_prompt: str = "请选择选项",
+        multiple_prompt: str = "请选择选项 (多选用逗号分隔)",
+        range_error: str = "选择超出范围，请重新选择",
+        invalid_error: str = "输入无效，请输入数字",
+    ) -> List[int]:
+        """列表选择语义"""
+        self.print_section(title, "")
+
+        # Display options as table
+        data = [[f"{i}.", option] for i, option in enumerate(options, 1)]
+        self.print_table_semantic(data)
+
+        prompt = multiple_prompt if allow_multiple else single_prompt
+        while True:
+            try:
+                selection = self.get_input_semantic(prompt)
+                indices = (
+                    [int(x.strip()) - 1 for x in selection.split(",")]
+                    if "," in selection and allow_multiple
+                    else [int(selection) - 1]
+                )
+                if all(0 <= i < len(options) for i in indices):
+                    return indices
+                else:
+                    self.print_error(range_error)
+            except (ValueError, IndexError):
+                self.print_error(invalid_error)
+
+    # === 辅助方法 ===
 
     def _create_yes_no_input(self, prompt: str) -> Optional[str]:
         """Create Yes/No button input"""
@@ -1223,6 +1376,8 @@ class FletUIHandler(UIHandlerBase):
         except Exception as e:
             raise RuntimeError(f"Failed to get RPC result: {e}")
 
+    # === 原有接口（保持向后兼容）===
+
     def clear_screen(self):
         """Clear screen via RPC"""
         return self.rpc("clear_screen")
@@ -1295,6 +1450,110 @@ class FletUIHandler(UIHandlerBase):
         elif not isinstance(prompt, str):
             prompt = str(prompt)
         return self.rpc("get_input", prompt, default=default)
+
+    # === 新的语义接口实现 ===
+
+    def print_text_semantic(self, text: str):
+        """打印纯文本 - 语义接口"""
+        return self.rpc("print_text_semantic", text)
+
+    def print_panel_semantic(self, content: str, title: str = None):
+        """显示面板内容 - 语义接口"""
+        return self.rpc("print_panel_semantic", content, title=title)
+
+    def print_table_semantic(
+        self, data: List[List[str]], headers: List[str] = None, title: str = None
+    ):
+        """显示表格数据 - 语义接口"""
+        return self.rpc("print_table_semantic", data, headers=headers, title=title)
+
+    def get_input_semantic(
+        self, prompt: str, default: str = "", exit_message: str = "再见!"
+    ) -> str:
+        """获取用户输入 - 语义接口"""
+        return self.rpc(
+            "get_input_semantic", prompt, default=default, exit_message=exit_message
+        )
+
+    def get_choice(self, prompt: str, target_key: str = "*") -> str:
+        """获取选择输入"""
+        return self.rpc("get_choice", prompt, target_key=target_key)
+
+    def wait_for_key(self, prompt: str = "\n按任意键继续..."):
+        """等待按键"""
+        return self.rpc("wait_for_key", prompt)
+
+    def confirm(
+        self,
+        message: str,
+        default: bool = False,
+        yes_text: str = "Y",
+        no_text: str = "n",
+    ) -> bool:
+        """确认对话框"""
+        return self.rpc(
+            "confirm", message, default=default, yes_text=yes_text, no_text=no_text
+        )
+
+    def show_progress(self, description: str):
+        """显示进度"""
+        return self.rpc("show_progress", description)
+
+    def print_success(self, message: str):
+        """成功消息语义"""
+        return self.rpc("print_success", message)
+
+    def print_error(self, message: str):
+        """错误消息语义"""
+        return self.rpc("print_error", message)
+
+    def print_warning(self, message: str):
+        """警告消息语义"""
+        return self.rpc("print_warning", message)
+
+    def print_info(self, message: str):
+        """信息消息语义"""
+        return self.rpc("print_info", message)
+
+    def print_banner(self, title: str, subtitle: str = "", version: str = ""):
+        """横幅语义"""
+        return self.rpc("print_banner", title, subtitle=subtitle, version=version)
+
+    def print_section(self, title: str, content: str):
+        """章节语义"""
+        return self.rpc("print_section", title, content)
+
+    def print_menu_table(self, title: str, options: List[Dict[str, Any]]) -> Any:
+        """菜单表格语义"""
+        return self.rpc("print_menu_table", title, options)
+
+    def print_help_panel(
+        self, help_items: List[Dict[str, str]], title: str = "操作说明"
+    ):
+        """帮助信息语义"""
+        return self.rpc("print_help_panel", help_items, title=title)
+
+    def select_from_list(
+        self,
+        title: str,
+        options: List[str],
+        allow_multiple: bool = False,
+        single_prompt: str = "请选择选项",
+        multiple_prompt: str = "请选择选项 (多选用逗号分隔)",
+        range_error: str = "选择超出范围，请重新选择",
+        invalid_error: str = "输入无效，请输入数字",
+    ) -> List[int]:
+        """列表选择语义"""
+        return self.rpc(
+            "select_from_list",
+            title,
+            options,
+            allow_multiple=allow_multiple,
+            single_prompt=single_prompt,
+            multiple_prompt=multiple_prompt,
+            range_error=range_error,
+            invalid_error=invalid_error,
+        )
 
     def create_choice_input(
         self, prompt: str, choices: List[Dict[str, str]]
